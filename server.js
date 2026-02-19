@@ -1,33 +1,58 @@
+require("dotenv").config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-require("dotenv").config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+
+// ✅ Security middleware
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://bagicha-frontend.vercel.app"
+  ],
+  credentials: true
+}));
+
 app.use(express.json());
 
-// Routes
-app.use("/api/bookings", require("./routes/bookingRoutes"));
+
+// ✅ Health check route (important for Render)
+app.get("/", (req, res) => {
+  res.send("Bagicha Backend API Running");
+});
+
+
+// ✅ Routes
 app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/bookings", require("./routes/bookingRoutes"));
 app.use("/api/settings", require("./routes/settingsRoutes"));
 
-// Port from environment
+
+// ✅ Use Render port
 const PORT = process.env.PORT || 5000;
 
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI)
-.then(() => {
-  console.log("MongoDB connected");
 
-  // Start server AFTER DB connects
+// ✅ MongoDB connection with production options
+mongoose.connect(process.env.MONGO_URI, {
+
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+
+})
+.then(() => {
+
+  console.log("✅ MongoDB connected");
+
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`✅ Server running on port ${PORT}`);
   });
 
 })
 .catch((err) => {
-  console.error("MongoDB connection error:", err);
+
+  console.error("❌ MongoDB connection error:", err);
+
 });

@@ -1,23 +1,45 @@
+require("dotenv").config();
+
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
 const Admin = require("./models/Admin");
 
-mongoose.connect("mongodb://127.0.0.1:27017/bagicha");
+// Use Atlas connection string from .env
+mongoose.connect(process.env.MONGO_URI)
+.then(() => {
+  console.log("MongoDB connected for admin creation");
+  createAdmin();
+})
+.catch(err => {
+  console.error(err);
+});
 
 async function createAdmin() {
 
-  const hashed = await bcrypt.hash("admin123", 10);
+  try {
 
-  await Admin.create({
-    username: "admin",
-    password: hashed
-  });
+    const existing = await Admin.findOne({ username: "admin" });
 
-  console.log("Admin created");
+    if (existing) {
+      console.log("Admin already exists");
+      process.exit();
+    }
 
-  process.exit();
+    const hashed = await bcrypt.hash("admin123", 10);
+
+    await Admin.create({
+      username: "admin",
+      password: hashed
+    });
+
+    console.log("Admin created successfully");
+
+    process.exit();
+
+  } catch (err) {
+    console.error(err);
+    process.exit();
+  }
 
 }
-
-createAdmin();
